@@ -100,7 +100,7 @@ class DynamixelController
 
   // Dynamixel Workbench Parameters
   DynamixelWorkbench *dxl_wb_;
-  std::map<std::string, uint32_t> dynamixel_;
+  std::map<std::string, uint32_t> dynamixel_; //map类型通常被称为关联数组
   std::vector<std::pair<std::string, ItemValue>> dynamixel_info_;
   dynamixel_workbench_msgs::DynamixelStateList dynamixel_state_list_;
   sensor_msgs::JointState joint_state_msg_;

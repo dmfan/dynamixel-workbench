@@ -158,7 +158,7 @@ bool DynamixelController::initSDKHandlers(void)
   bool result = false;
   const char* log = NULL;
 
-  auto it = dynamixel_.begin();
+  auto it = dynamixel_.begin();//关联容器 第一个元素 it是指向一个pair<const string, size_t>对象的引用   其first成员保存const的关键字，second成员保存值
   result = dxl_wb_->addSyncWriteHandler(it->second, "Goal_Position", &log);
   if (result == false)
   {
@@ -665,21 +665,22 @@ void DynamixelController::writeCallback(const ros::TimerEvent&)
 
 void DynamixelController::trajectoryMsgCallback(const trajectory_msgs::JointTrajectory::ConstPtr &msg)
 {
+  /* 将msg数据内容逐个取出存储到结构体wp中，再从结构体wp中取出push_back给vector临时变量goal, 变量goal再转存储到 jnt_tra_point_msg ，再存储到全局变量 jnt_tra_msg_ 中*/
   uint8_t id_cnt = 0;
   bool result = false;
   WayPoint wp;
 
   if (is_moving_ == false)
   {
-    jnt_tra_msg_->joint_names.clear();
-    jnt_tra_msg_->points.clear();
+    jnt_tra_msg_->joint_names.clear();  //id_cnt 个 joint
+    jnt_tra_msg_->points.clear();     // msg->points.size()  cnt 
     pre_goal_.clear();
 
     result = getPresentPosition(msg->joint_names);
     if (result == false)
       ROS_ERROR("Failed to get Present Position");
 
-    for (auto const& joint:msg->joint_names)
+    for (auto const& joint:msg->joint_names)    // id_cnt 个 joint
     {
       ROS_INFO("'%s' is ready to move", joint.c_str());
 
@@ -690,12 +691,12 @@ void DynamixelController::trajectoryMsgCallback(const trajectory_msgs::JointTraj
     if (id_cnt != 0)
     {
       uint8_t cnt = 0;
-      while(cnt < msg->points.size())
+      while(cnt < msg->points.size())//cnt points
       {
         std::vector<WayPoint> goal;
         for (std::vector<int>::size_type id_num = 0; id_num < msg->points[cnt].positions.size(); id_num++)
         {
-          wp.position = msg->points[cnt].positions.at(id_num);
+          wp.position = msg->points[cnt].positions.at(id_num);  //  points/positions/id_number   每个舵机ID的位置(double)wp.position
 
           if (msg->points[cnt].velocities.size() != 0)  wp.velocity = msg->points[cnt].velocities.at(id_num);
           else wp.velocity = 0.0f;
@@ -703,15 +704,15 @@ void DynamixelController::trajectoryMsgCallback(const trajectory_msgs::JointTraj
           if (msg->points[cnt].accelerations.size() != 0)  wp.acceleration = msg->points[cnt].accelerations.at(id_num);
           else wp.acceleration = 0.0f;
 
-          goal.push_back(wp);
+          goal.push_back(wp);   // goal 压入了 msg->points[cnt].positions.size() 个wp元素
         }
 
         if (use_moveit_ == true)
         {
           trajectory_msgs::JointTrajectoryPoint jnt_tra_point_msg;
 
-          for (uint8_t id_num = 0; id_num < id_cnt; id_num++)
-          {
+          for (uint8_t id_num = 0; id_num < id_cnt; id_num++) // joint number  "All specified values are in the same order as the joint names in JointTrajectory.msg"
+          {                                                   // 从 goal 取出 id_cnt 个元素内容 压入 jnt_tra_point_msg
             jnt_tra_point_msg.positions.push_back(goal[id_num].position);
             jnt_tra_point_msg.velocities.push_back(goal[id_num].velocity);
             jnt_tra_point_msg.accelerations.push_back(goal[id_num].acceleration);
@@ -719,7 +720,7 @@ void DynamixelController::trajectoryMsgCallback(const trajectory_msgs::JointTraj
 
           jnt_tra_msg_->points.push_back(jnt_tra_point_msg);
 
-          cnt++;
+          cnt++; // count points
         }
         else
         {
