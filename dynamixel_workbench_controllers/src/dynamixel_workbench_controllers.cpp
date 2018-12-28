@@ -86,7 +86,7 @@ bool DynamixelController::getDynamixelsInfo(const std::string yaml_file)
       int32_t value = it_item->second.as<int32_t>();
 
       if (item_name == "ID")
-        dynamixel_[name] = value;
+        dynamixel_[name] = value; // dynamixel_.insert dynamixel_赋值
 
       ItemValue item_value = {item_name, value};
       std::pair<std::string, ItemValue> info(name, item_value);
@@ -167,7 +167,7 @@ bool DynamixelController::initSDKHandlers(void)
   }
 
   if (dxl_wb_->getProtocolVersion() == 2.0f)
-  {    
+  {
     if (strcmp(dxl_wb_->getModelName(it->second), "XL-320") == 0)
     {
       result = dxl_wb_->addSyncWriteHandler(it->second, "Moving_Speed", &log);
@@ -635,7 +635,7 @@ void DynamixelController::writeCallback(const ros::TimerEvent&)
     for (uint8_t index = 0; index < id_cnt; index++)
       dynamixel_position[index] = dxl_wb_->convertRadian2Value(id_array[index], jnt_tra_msg_->points[point_cnt].positions.at(index));
 
-    result = dxl_wb_->syncWrite(SYNC_WRITE_HANDLER_FOR_GOAL_POSITION, id_array, id_cnt, dynamixel_position, 1, &log);
+    result = dxl_wb_->syncWrite(SYNC_WRITE_HANDLER_FOR_GOAL_POSITION, id_array, id_cnt, dynamixel_position, 1, &log); // 同步写指令
     if (result == false)
     {
       ROS_ERROR("%s", log);

@@ -911,7 +911,8 @@ bool DynamixelDriver::readRegister(uint8_t id, const char *item_name, int32_t *d
 
 void DynamixelDriver::getParam(int32_t data, uint8_t *param)
 {
-  param[0] = DXL_LOBYTE(DXL_LOWORD(data));
+  //int32_t -> uint8_t
+  param[0] = DXL_LOBYTE(DXL_LOWORD(data));  // DXL_LOWORD Definition at line 39 of file packet_handler.h.
   param[1] = DXL_HIBYTE(DXL_LOWORD(data));
   param[2] = DXL_LOBYTE(DXL_HIWORD(data));
   param[3] = DXL_HIBYTE(DXL_HIWORD(data));
@@ -919,6 +920,7 @@ void DynamixelDriver::getParam(int32_t data, uint8_t *param)
 
 bool DynamixelDriver::addSyncWriteHandler(uint16_t address, uint16_t length, const char **log)
 {
+  /* address length 分别对应 GroupSyncWrite() 的 第三第四个参数  */
   if (sync_write_handler_cnt_ > (MAX_HANDLER_NUM-1))
   {
     if (log != NULL) *log = "[DynamixelDriver] Too many sync write handler are added (MAX = 5)";
@@ -969,6 +971,7 @@ bool DynamixelDriver::addSyncWriteHandler(uint8_t id, const char *item_name, con
 
 bool DynamixelDriver::syncWrite(uint8_t index, int32_t *data, const char **log)
 {
+  /* Execute sync write to all pinged Dynamixels */
   ErrorFromSDK sdk_error = {0, false, false, 0};
 
   uint8_t dxl_cnt = 0;
@@ -978,7 +981,7 @@ bool DynamixelDriver::syncWrite(uint8_t index, int32_t *data, const char **log)
   {
     for (int j = 0; j < tools_[i].getDynamixelCount(); j++)
     {
-      getParam(data[dxl_cnt], parameter);
+      getParam(data[dxl_cnt], parameter);//int32_t -> uint8_t
       sdk_error.dxl_addparam_result = syncWriteHandler_[index].groupSyncWrite->addParam(tools_[i].getID()[j], (uint8_t *)&parameter);
       if (sdk_error.dxl_addparam_result != true)
       {
@@ -1005,9 +1008,10 @@ bool DynamixelDriver::syncWrite(uint8_t index, int32_t *data, const char **log)
 
 bool DynamixelDriver::syncWrite(uint8_t index, uint8_t *id, uint8_t id_num, int32_t *data, uint8_t data_num_for_each_id, const char **log)
 {
+  /* Execute sync write to some Dynamixels */
   ErrorFromSDK sdk_error = {0, false, false, 0};
 
-  uint8_t parameter[4] = {0, 0, 0, 0};
+  uint8_t parameter[4] = {0, 0, 0, 0};//四字节数据
   uint8_t multi_parameter[4*data_num_for_each_id];
   uint8_t cnt = 0;
 
@@ -1015,7 +1019,7 @@ bool DynamixelDriver::syncWrite(uint8_t index, uint8_t *id, uint8_t id_num, int3
   {
     for (int j = 0; j < data_num_for_each_id; j++)
     {
-      getParam(data[cnt++], parameter);
+      getParam(data[cnt++], parameter);//int32_t -> uint8_t
       for (int k = 0; k < 4; k++)
       {
         multi_parameter[4*j+k] = parameter[k];
